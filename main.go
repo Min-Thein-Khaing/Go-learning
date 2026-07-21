@@ -4,6 +4,8 @@ import (
 	"booking-app/helper"
 	"fmt"
 	// "strconv"
+	"sync"
+	"time"
 )
 
 var conferenceName = "Go Conference"
@@ -20,6 +22,7 @@ type UserData struct {
 	numberOfTickets uint
 }
 
+var wg = sync.WaitGroup{}
 func main() {
 
 	greetUser()
@@ -30,52 +33,59 @@ func main() {
 
 	//slices
 	//data take user
-	for {
-		firstName, lastName, email, userTicket := getUserInput()
-		validateName, validateEmail, validateTicket := helper.ValidateUserInput(firstName, lastName, email, userTicket, remaingTickets)
 
-		if validateName && validateEmail && validateTicket {
-			calcTicket(firstName, lastName, userTicket, email)
+	firstName, lastName, email, userTicket := getUserInput()
+	validateName, validateEmail, validateTicket := helper.ValidateUserInput(firstName, lastName, email, userTicket, remaingTickets)
 
-			//firstName
-			firstNames := printFirstName()
-			fmt.Printf("The first names of people Booking: %v\n", firstNames)
+	if validateName && validateEmail && validateTicket {
+		calcTicket(firstName, lastName, userTicket, email)
+		wg.Add(1)
+		go sendTicket(userTicket, firstName, lastName, email)
 
-			fmt.Printf("Thank you %v %v for booking %v tickets. You will receive confirmation at %v\n", firstName, lastName, userTicket, email)
-			fmt.Printf("%v tickets remaining for %v\n", remaingTickets, conferenceName)
+		
+		
+		//firstName
+		firstNames := printFirstName()
+		fmt.Printf("The first names of people Booking: %v\n", firstNames)
 
-			boolenCheckingCase := remaingTickets == 0
-			if boolenCheckingCase {
-				fmt.Println("Our conference is booked out. Come back next year.")
-				break
-			}
+		fmt.Printf("Thank you %v %v for booking %v tickets. You will receive confirmation at %v\n", firstName, lastName, userTicket, email)
+		fmt.Printf("%v tickets remaining for %v\n", remaingTickets, conferenceName)
 
-		} else if remaingTickets == 0 {
+		boolenCheckingCase := remaingTickets == 0
+		if boolenCheckingCase {
 			fmt.Println("Our conference is booked out. Come back next year.")
-		} else {
-			fmt.Printf("Your validation is invalid. Please try again\n")
+			// break
 		}
 
+	} else if remaingTickets == 0 {
+		fmt.Println("Our conference is booked out. Come back next year.")
+	} else {
+		fmt.Printf("Your validation is invalid. Please try again\n")
 	}
-	city := "London"
 
-	switch city {
-	case "New York":
-	//some code
-	case "Singapore", "Hong Kong":
-	//some code
-	case "London", "Berlin":
-	//some code
+	wg.Wait()
 
-	//some code
-	case "Mexico City":
-	//some code
-
-	//
-	default:
-		fmt.Println("Default case")
-	}
 }
+
+// city := "London"
+
+// switch city {
+// case "New York":
+// //some code
+// case "Singapore", "Hong Kong":
+// //some code
+// case "London", "Berlin":
+// //some code
+
+// //some code
+// case "Mexico City":
+// //some code
+
+// //
+// default:
+// 	fmt.Println("Default case")
+
+// }
 
 func greetUser() {
 	fmt.Printf("Welcome to %v booking application\n", conferenceName)
@@ -138,6 +148,11 @@ func calcTicket(firstName string, lastName string, userTicket uint, email string
 	return firstName, lastName, userTicket
 }
 
-func sendTicket(userTicket uint, firstName string, lastName string) {
-	fmt.Sprintf("%v tickets ,%v %v ", userTicket, firstName, lastName)
+func sendTicket(userTicket uint, firstName string, lastName string, email string) {
+	time.Sleep(10 * time.Second)
+	var ticket = fmt.Sprintf("%v tickets ,%v %v ", userTicket, firstName, lastName)
+	fmt.Println("#######################")
+	fmt.Printf("sending ticket:\n %v \nto email address %v\n", ticket, email)
+	fmt.Println("#######################")
+	wg.Done()
 }
